@@ -14,10 +14,14 @@ import {
   View,
 } from 'react-native';
 
-type VideoItem = { id: string; name: string; uri: string };
+import {
+  isValidPin,
+  parseLibrary,
+  serializeLibrary,
+  type VideoItem,
+} from './src/appLogic';
 
 const STORAGE_KEY = 'vifoca.videos';
-const DEMO_PIN = '2468';
 
 function Player({ item, onBack }: { item: VideoItem; onBack: () => void }) {
   const player = useVideoPlayer(item.uri, (instance) => {
@@ -42,7 +46,7 @@ function Player({ item, onBack }: { item: VideoItem; onBack: () => void }) {
   };
 
   const unlock = () => {
-    if (pinInput !== DEMO_PIN) {
+    if (!isValidPin(pinInput)) {
       setPinInput('');
       Alert.alert('Not quite', 'Ask the human for the unlock PIN.');
       return;
@@ -124,7 +128,7 @@ export default function App() {
     const loadLibrary = async () => {
       try {
         const value = await AsyncStorage.getItem(STORAGE_KEY);
-        if (value) setVideos(JSON.parse(value) as VideoItem[]);
+        if (value) setVideos(parseLibrary(value));
       } catch {
         Alert.alert('Library unavailable', 'Your saved videos could not be loaded.');
       } finally {
@@ -137,7 +141,7 @@ export default function App() {
   const saveLibrary = async (next: VideoItem[]) => {
     setVideos(next);
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      await AsyncStorage.setItem(STORAGE_KEY, serializeLibrary(next));
     } catch {
       Alert.alert('Could not save library', 'The change is available for now, but may not persist after closing the app.');
     }

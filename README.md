@@ -11,6 +11,14 @@ npx expo start
 
 Import one or more videos from the library, open one, and tap **Lock**. Lock mode leaves the video playing while hiding playback and navigation controls. It unlocks with a 3.5-second long-press in the top-left corner followed by the demo PIN `2468`.
 
+## Verify locally
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+```
+
 ## Current behavior
 
 - Videos are listed locally in a scrollable library; tap to play and long-press an item to remove it.
@@ -24,3 +32,9 @@ Import one or more videos from the library, open one, and tap **Lock**. Lock mod
 - Add real thumbnails and playlists.
 - Add native Guided Access/app-pinning instructions.
 - Add cloud storage only after validating local playback.
+
+## License
+
+Copyright (c) 2026 Meo Inc. All rights reserved. This is proprietary software;
+unauthorized copying, distribution, or commercial use is prohibited. See
+[LICENSE](LICENSE) for details.
