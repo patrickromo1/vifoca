@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Vifoca",
+    "slug": "vifoca",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#101318"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Vifoca needs access so you can add cat videos."
+      }
+    },
+    "android": {
+      "package": "com.vifoca.app"
+    },
+    "plugins": ["expo-video", "expo-document-picker"]
+  }
+}

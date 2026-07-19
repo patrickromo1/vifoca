@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# Native build output
+android/.gradle/
+android/app/build/
+android/build/
+ios/Pods/
+ios/build/
+
+# Environment and local configuration
+.env
+.env.*
+!.env.example
+
+# Logs and test output
+*.log
+coverage/
+
+# macOS / editors
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# TypeScript incremental build info
+*.tsbuildinfo
