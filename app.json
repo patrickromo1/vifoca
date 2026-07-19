@@ -3,7 +3,7 @@
     "name": "Vifoca",
     "slug": "vifoca",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "userInterfaceStyle": "dark",
     "splash": {
       "backgroundColor": "#101318"
