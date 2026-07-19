@@ -6,7 +6,7 @@ import {
   parseLibrary,
   serializeLibrary,
   type VideoItem,
-} from './appLogic';
+} from './app-logic';
 
 describe('library persistence', () => {
   it('serializes and restores videos', () => {

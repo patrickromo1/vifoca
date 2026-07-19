@@ -17,6 +17,10 @@
     "android": {
       "package": "com.vifoca.app"
     },
-    "plugins": ["expo-video", "expo-document-picker"]
+    "plugins": [
+      "expo-video",
+      "expo-document-picker",
+      "expo-sqlite"
+    ]
   }
 }
