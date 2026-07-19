@@ -3,9 +3,10 @@ import 'expo-sqlite/localStorage/install';
 import { StatusBar } from 'expo-status-bar';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  AppState,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,6 +21,10 @@ import {
   serializeLibrary,
   type VideoItem,
 } from '@/src/app-logic';
+import {
+  isLeavingForeground,
+  isReturningToForeground,
+} from '@/src/playback-lifecycle';
 
 const STORAGE_KEY = 'vifoca.videos';
 
@@ -33,12 +38,31 @@ function Player({ item, onBack }: { item: VideoItem; onBack: () => void }) {
   const [unlocking, setUnlocking] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [isPlaying, setIsPlaying] = useState(true);
+  const appState = useRef(AppState.currentState);
+  const isPlayingRef = useRef(true);
+  const resumeOnForeground = useRef(false);
 
   const togglePlayback = () => {
-    if (isPlaying) player.pause();
-    else player.play();
-    setIsPlaying((playing) => !playing);
+    const nextIsPlaying = !isPlayingRef.current;
+    if (nextIsPlaying) player.play();
+    else player.pause();
+    isPlayingRef.current = nextIsPlaying;
+    setIsPlaying(nextIsPlaying);
   };
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (isLeavingForeground(appState.current, nextAppState)) {
+        resumeOnForeground.current = isPlayingRef.current;
+      } else if (isReturningToForeground(appState.current, nextAppState)) {
+        if (resumeOnForeground.current) player.play();
+        resumeOnForeground.current = false;
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => subscription.remove();
+  }, [player]);
 
   const lock = () => {
     setLocked(true);
