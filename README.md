@@ -9,7 +9,7 @@ npm install
 npx expo start
 ```
 
-Import one or more videos from the library, open one, and tap **Lock**. Lock mode leaves the video playing while hiding playback and navigation controls. It unlocks with a 3.5-second long-press in the top-left corner followed by the demo PIN `2468`.
+Import one or more videos from the library, open one, and tap **Lock**. Lock mode leaves the video playing while hiding playback and navigation controls. Tap **Owner unlock**, then enter the demo PIN `2468`.
 
 ## Verify locally
 
