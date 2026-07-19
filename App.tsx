@@ -1,12 +1,12 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
+import 'expo-sqlite/localStorage/install';
 import { StatusBar } from 'expo-status-bar';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import {
   Alert,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,11 +19,12 @@ import {
   parseLibrary,
   serializeLibrary,
   type VideoItem,
-} from './src/appLogic';
+} from '@/src/app-logic';
 
 const STORAGE_KEY = 'vifoca.videos';
 
 function Player({ item, onBack }: { item: VideoItem; onBack: () => void }) {
+  const insets = useSafeAreaInsets();
   const player = useVideoPlayer(item.uri, (instance) => {
     instance.loop = true;
     instance.play();
@@ -60,7 +61,7 @@ function Player({ item, onBack }: { item: VideoItem; onBack: () => void }) {
     <View style={styles.playerScreen}>
       <StatusBar hidden />
       {!locked && (
-        <SafeAreaView style={styles.playerTopBar}>
+        <View style={[styles.playerTopBar, { paddingTop: insets.top }]}>
           <Pressable onPress={onBack} hitSlop={12} accessibilityRole="button">
             <Text style={styles.back}>‹ Library</Text>
           </Pressable>
@@ -68,16 +69,16 @@ function Player({ item, onBack }: { item: VideoItem; onBack: () => void }) {
           <Pressable onPress={lock} style={styles.lockButton} accessibilityRole="button">
             <Text style={styles.lockButtonText}>Lock</Text>
           </Pressable>
-        </SafeAreaView>
+        </View>
       )}
       <VideoView player={player} style={styles.video} nativeControls={false} contentFit="contain" />
       {!locked && (
-        <SafeAreaView style={styles.controls}>
+        <View style={[styles.controls, { paddingBottom: Math.max(insets.bottom, 12) }]}>
           <Pressable onPress={togglePlayback} style={styles.playButton} accessibilityRole="button">
             <Text style={styles.playButtonText}>{isPlaying ? 'Pause' : 'Play'}</Text>
           </Pressable>
           <Text style={styles.tip}>Lock the screen before handing it to your cat.</Text>
-        </SafeAreaView>
+        </View>
       )}
       {locked && (
         <View style={styles.lockedOverlay} pointerEvents="box-none">
@@ -118,16 +119,16 @@ function Player({ item, onBack }: { item: VideoItem; onBack: () => void }) {
   );
 }
 
-export default function App() {
+function AppContent() {
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [selected, setSelected] = useState<VideoItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
 
   useEffect(() => {
-    const loadLibrary = async () => {
+    const loadLibrary = () => {
       try {
-        const value = await AsyncStorage.getItem(STORAGE_KEY);
+        const value = localStorage.getItem(STORAGE_KEY);
         if (value) setVideos(parseLibrary(value));
       } catch {
         Alert.alert('Library unavailable', 'Your saved videos could not be loaded.');
@@ -135,13 +136,13 @@ export default function App() {
         setLoading(false);
       }
     };
-    void loadLibrary();
+    loadLibrary();
   }, []);
 
-  const saveLibrary = async (next: VideoItem[]) => {
+  const saveLibrary = (next: VideoItem[]) => {
     setVideos(next);
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, serializeLibrary(next));
+      localStorage.setItem(STORAGE_KEY, serializeLibrary(next));
     } catch {
       Alert.alert('Could not save library', 'The change is available for now, but may not persist after closing the app.');
     }
@@ -161,7 +162,7 @@ export default function App() {
         name: asset.name || 'Untitled video',
         uri: asset.uri,
       }));
-      await saveLibrary([...videos, ...added]);
+      saveLibrary([...videos, ...added]);
     } catch {
       Alert.alert('Could not import video', 'Please try selecting the video again.');
     } finally {
@@ -172,16 +173,20 @@ export default function App() {
   const removeVideo = (item: VideoItem) => {
     Alert.alert('Remove video?', item.name, [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => void saveLibrary(videos.filter((video) => video.id !== item.id)) },
+      { text: 'Remove', style: 'destructive', onPress: () => saveLibrary(videos.filter((video) => video.id !== item.id)) },
     ]);
   };
 
   if (selected) return <Player item={selected} onBack={() => setSelected(null)} />;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.libraryContent}
+      contentInsetAdjustmentBehavior="automatic"
+      showsVerticalScrollIndicator={false}
+    >
       <StatusBar style="light" />
-      <ScrollView contentContainerStyle={styles.libraryContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View><Text style={styles.eyebrow}>VIFOCA</Text><Text style={styles.title}>Cat TV</Text></View>
           <Text style={styles.paw}>🐾</Text>
@@ -201,8 +206,15 @@ export default function App() {
           </Pressable>
         ))}
         <View style={styles.footer}><Text style={styles.footerText}>Lock keeps the video playing. Demo PIN: 2468</Text></View>
-      </ScrollView>
-    </SafeAreaView>
+    </ScrollView>
+  );
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
   );
 }
 
