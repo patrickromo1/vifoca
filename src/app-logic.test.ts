@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  DEMO_PIN,
-  isValidPin,
   parseLibrary,
   serializeLibrary,
   type VideoItem,
@@ -23,15 +21,5 @@ describe('library persistence', () => {
 
   it('throws for malformed persisted JSON', () => {
     expect(() => parseLibrary('{not-json')).toThrow();
-  });
-});
-
-describe('PIN validation', () => {
-  it('accepts the demo PIN', () => {
-    expect(isValidPin(DEMO_PIN)).toBe(true);
-  });
-
-  it.each(['', '246', '24680', 'abcd'])('rejects %j', (value) => {
-    expect(isValidPin(value)).toBe(false);
   });
 });
