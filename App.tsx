@@ -11,12 +11,10 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 
 import {
-  isValidPin,
   parseLibrary,
   serializeLibrary,
   type VideoItem,
@@ -35,8 +33,7 @@ function Player({ item, onBack }: { item: VideoItem; onBack: () => void }) {
     instance.play();
   });
   const [locked, setLocked] = useState(false);
-  const [unlocking, setUnlocking] = useState(false);
-  const [pinInput, setPinInput] = useState('');
+  const [holdingOwnerUnlock, setHoldingOwnerUnlock] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const appState = useRef(AppState.currentState);
   const isPlayingRef = useRef(true);
@@ -66,19 +63,12 @@ function Player({ item, onBack }: { item: VideoItem; onBack: () => void }) {
 
   const lock = () => {
     setLocked(true);
-    setUnlocking(false);
-    setPinInput('');
+    setHoldingOwnerUnlock(false);
   };
 
   const unlock = () => {
-    if (!isValidPin(pinInput)) {
-      setPinInput('');
-      Alert.alert('Not quite', 'Ask the human for the unlock PIN.');
-      return;
-    }
     setLocked(false);
-    setUnlocking(false);
-    setPinInput('');
+    setHoldingOwnerUnlock(false);
   };
 
   return (
@@ -105,38 +95,25 @@ function Player({ item, onBack }: { item: VideoItem; onBack: () => void }) {
         </View>
       )}
       {locked && (
-        <View style={styles.lockedOverlay} pointerEvents="box-none">
+        <View style={styles.lockedOverlay}>
           <Pressable
-            style={styles.hiddenUnlockZone}
-            onLongPress={() => setUnlocking(true)}
-            delayLongPress={3500}
-            accessibilityLabel="Owner unlock area"
-            accessibilityHint="Long press for three and a half seconds to show the owner PIN entry"
-          />
-          <View style={styles.lockMessage} pointerEvents="none">
+            style={styles.ownerUnlockButton}
+            onLongPress={() => {
+              unlock();
+            }}
+            onPressIn={() => setHoldingOwnerUnlock(true)}
+            onPressOut={() => setHoldingOwnerUnlock(false)}
+            delayLongPress={4000}
+            accessibilityRole="button"
+            accessibilityLabel="Owner unlock"
+            accessibilityHint="Press and hold for four seconds to unlock"
+          >
+            <Text style={styles.ownerUnlockButtonText}>{holdingOwnerUnlock ? 'Keep holding…' : 'Hold to unlock'}</Text>
+          </Pressable>
+          <View style={styles.lockMessage}>
             <Text style={styles.lockedTitle}>Playing for your cat</Text>
-            <Text style={styles.lockedHint}>Owner unlock is hidden in the top-left corner</Text>
+            <Text style={styles.lockedHint}>Use Owner unlock when you are ready to exit.</Text>
           </View>
-          {unlocking && (
-            <View style={styles.pinPanel}>
-              <Text style={styles.pinTitle}>Owner unlock</Text>
-              <TextInput
-                autoFocus
-                value={pinInput}
-                onChangeText={setPinInput}
-                onSubmitEditing={unlock}
-                placeholder="PIN"
-                placeholderTextColor="#89919f"
-                keyboardType="number-pad"
-                secureTextEntry
-                maxLength={8}
-                style={styles.pinInput}
-              />
-              <Pressable style={styles.primaryButton} onPress={unlock} accessibilityRole="button">
-                <Text style={styles.primaryButtonText}>Unlock</Text>
-              </Pressable>
-            </View>
-          )}
         </View>
       )}
     </View>
@@ -229,7 +206,7 @@ function AppContent() {
             <Text style={styles.chevron}>›</Text>
           </Pressable>
         ))}
-        <View style={styles.footer}><Text style={styles.footerText}>Lock keeps the video playing. Demo PIN: 2468</Text></View>
+        <View style={styles.footer}><Text style={styles.footerText}>Lock keeps the video playing. Hold to unlock when you are ready to exit.</Text></View>
     </ScrollView>
   );
 }
@@ -249,5 +226,5 @@ const styles = StyleSheet.create({
   empty: { backgroundColor: '#191e27', borderRadius: 20, padding: 30, alignItems: 'center' }, emptyPaw: { fontSize: 38 }, emptyTitle: { color: '#fff', fontWeight: '700', fontSize: 18, marginTop: 10 }, emptyText: { color: '#9ca5b3', textAlign: 'center', lineHeight: 21, marginTop: 7 },
   videoRow: { backgroundColor: '#191e27', borderRadius: 16, padding: 10, flexDirection: 'row', alignItems: 'center', marginBottom: 10 }, thumbnail: { width: 58, height: 58, borderRadius: 12, backgroundColor: '#2b3841', alignItems: 'center', justifyContent: 'center' }, thumbnailText: { color: '#81d4b5', fontSize: 20 }, rowText: { flex: 1, marginLeft: 12 }, videoTitle: { color: '#fff', fontSize: 15, fontWeight: '700' }, videoMeta: { color: '#8f99a8', fontSize: 12, marginTop: 5 }, chevron: { color: '#788393', fontSize: 28, marginHorizontal: 8 }, footer: { marginTop: 'auto', paddingVertical: 20, alignItems: 'center' }, footerText: { color: '#687281', fontSize: 12 },
   playerScreen: { flex: 1, backgroundColor: '#000' }, playerTopBar: { backgroundColor: '#101318', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, gap: 12 }, back: { color: '#81d4b5', fontSize: 16 }, playerName: { color: '#fff', flex: 1, fontWeight: '700' }, lockButton: { borderColor: '#81d4b5', borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 }, lockButtonText: { color: '#81d4b5', fontWeight: '800' }, video: { flex: 1 }, controls: { backgroundColor: '#101318', minHeight: 84, paddingHorizontal: 16, paddingTop: 12, flexDirection: 'row', alignItems: 'center', gap: 16 }, playButton: { backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 18, paddingVertical: 10 }, playButtonText: { color: '#101318', fontWeight: '800' }, tip: { color: '#89919f', flex: 1, fontSize: 12 },
-  lockedOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0, 0, 0, 0.08)', alignItems: 'center', justifyContent: 'center' }, hiddenUnlockZone: { position: 'absolute', top: 0, left: 0, width: 110, height: 110 }, lockMessage: { alignItems: 'center', opacity: 0.35 }, lockedTitle: { color: '#d1d6dd', fontSize: 15 }, lockedHint: { color: '#c2c8d0', fontSize: 11, marginTop: 8 }, pinPanel: { position: 'absolute', bottom: 50, backgroundColor: '#191e27', borderRadius: 18, padding: 20, width: 260 }, pinTitle: { color: '#fff', fontWeight: '700', fontSize: 16, marginBottom: 12 }, pinInput: { backgroundColor: '#101318', color: '#fff', borderRadius: 10, padding: 12, marginBottom: 10 }, primaryButton: { backgroundColor: '#81d4b5', borderRadius: 10, padding: 12, alignItems: 'center' }, primaryButtonText: { color: '#10201c', fontWeight: '800' },
+  lockedOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0, 0, 0, 0.08)', alignItems: 'center', justifyContent: 'center' }, ownerUnlockButton: { position: 'absolute', top: 18, left: 18, backgroundColor: 'rgba(16, 19, 24, 0.82)', borderColor: '#81d4b5', borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9 }, ownerUnlockButtonText: { color: '#81d4b5', fontSize: 13, fontWeight: '800' }, lockMessage: { alignItems: 'center', opacity: 0.5 }, lockedTitle: { color: '#d1d6dd', fontSize: 15 }, lockedHint: { color: '#c2c8d0', fontSize: 11, marginTop: 8 },
 });
